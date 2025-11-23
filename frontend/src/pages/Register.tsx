@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 
 export const Register: React.FC = () => {
@@ -38,93 +39,169 @@ export const Register: React.FC = () => {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        when: "beforeChildren",
+        staggerChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.4 },
+    },
+  };
+
+  const floatingAnimation = {
+    y: [0, -10, 0],
+    transition: {
+      duration: 3,
+      repeat: Infinity,
+      ease: "easeInOut" as const,
+    },
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Create your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Start practicing for your interviews
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      {/* Subtle animated background elements */}
+      <motion.div
+        animate={floatingAnimation}
+        className="absolute top-40 left-20 w-96 h-96 bg-blue-100/30 dark:bg-blue-900/10 rounded-full blur-3xl"
+      />
+      <motion.div
+        animate={{
+          ...floatingAnimation,
+          transition: { ...floatingAnimation.transition, delay: 1.5 },
+        }}
+        className="absolute bottom-40 right-20 w-80 h-80 bg-purple-100/30 dark:bg-purple-900/10 rounded-full blur-3xl"
+      />
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-2xl w-full space-y-8 relative z-10"
+      >
+        <motion.div
+          className="card bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl p-12 rounded-2xl"
+          whileHover={{ scale: 1.01 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
+          <motion.div variants={itemVariants}>
+            <h2 className="text-center text-5xl font-light text-gray-900 dark:text-gray-100 mb-3 tracking-tight">
+              Create your account
+            </h2>
+            <p className="text-center text-base text-gray-600 dark:text-gray-400 mb-10">
+              Start practicing for your interviews
+            </p>
+          </motion.div>
 
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="input"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="input"
-                placeholder="Password (min. 6 characters)"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="confirm-password" className="sr-only">
-                Confirm Password
-              </label>
-              <input
-                id="confirm-password"
-                name="confirm-password"
-                type="password"
-                required
-                className="input"
-                placeholder="Confirm password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
-          </div>
+          <form className="space-y-8" onSubmit={handleSubmit}>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="alert bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 rounded-lg p-4"
+              >
+                {error}
+              </motion.div>
+            )}
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn btn-primary w-full"
-            >
-              {loading ? 'Creating account...' : 'Create account'}
-            </button>
-          </div>
+            <motion.div variants={itemVariants} className="space-y-6">
+              <div className="form-control">
+                <label htmlFor="email" className="label">
+                  <span className="label-text text-gray-700 dark:text-gray-300 font-normal text-sm">
+                    Email address
+                  </span>
+                </label>
+                <motion.input
+                  whileFocus={{ scale: 1.005 }}
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  className="input input-bordered w-full bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 text-base h-12 rounded-lg transition-all"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
 
-          <div className="text-center">
-            <Link
-              to="/login"
-              className="text-primary-600 hover:text-primary-500 dark:text-primary-400"
-            >
-              Already have an account? Sign in
-            </Link>
-          </div>
-        </form>
-      </div>
+              <div className="form-control">
+                <label htmlFor="password" className="label">
+                  <span className="label-text text-gray-700 dark:text-gray-300 font-normal text-sm">
+                    Password
+                  </span>
+                </label>
+                <motion.input
+                  whileFocus={{ scale: 1.005 }}
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  className="input input-bordered w-full bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 text-base h-12 rounded-lg transition-all"
+                  placeholder="Password (min. 6 characters)"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+
+              <div className="form-control">
+                <label htmlFor="confirm-password" className="label">
+                  <span className="label-text text-gray-700 dark:text-gray-300 font-normal text-sm">
+                    Confirm Password
+                  </span>
+                </label>
+                <motion.input
+                  whileFocus={{ scale: 1.005 }}
+                  id="confirm-password"
+                  name="confirm-password"
+                  type="password"
+                  required
+                  className="input input-bordered w-full bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 text-base h-12 rounded-lg transition-all"
+                  placeholder="Confirm password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </div>
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                type="submit"
+                disabled={loading}
+                className="btn btn-primary w-full bg-gray-900 hover:bg-gray-800 dark:bg-gray-100 dark:hover:bg-white border-0 text-white dark:text-gray-900 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-base h-12 rounded-lg transition-all"
+              >
+                {loading ? (
+                  <span className="loading loading-spinner loading-md"></span>
+                ) : (
+                  'Create account'
+                )}
+              </motion.button>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="text-center">
+              <Link
+                to="/login"
+                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 font-normal text-sm transition-colors"
+              >
+                Already have an account? <span className="font-medium underline underline-offset-2">Sign in</span>
+              </Link>
+            </motion.div>
+          </form>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };
