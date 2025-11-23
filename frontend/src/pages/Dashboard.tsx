@@ -1,26 +1,26 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import { jobDescriptionsAPI } from '@/services/api';
-import type { JobDescription } from '@/types';
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { jobDescriptionsAPI } from "@/services/api";
+import type { JobDescription } from "@/types";
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
   const { data: jobDescriptions, isLoading } = useQuery({
-    queryKey: ['jobDescriptions'],
+    queryKey: ["jobDescriptions"],
     queryFn: jobDescriptionsAPI.list,
   });
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      questions_generated: 'bg-green-100 text-green-800',
-      error: 'bg-red-100 text-red-800',
+      pending: "bg-yellow-100 text-yellow-800",
+      questions_generated: "bg-green-100 text-green-800",
+      error: "bg-red-100 text-red-800",
     };
-    return badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-800';
+    return badges[status as keyof typeof badges] || "bg-gray-100 text-gray-800";
   };
 
   return (
@@ -44,7 +44,7 @@ export const Dashboard: React.FC = () => {
             Your Interview Prep Sessions
           </h2>
           <button
-            onClick={() => navigate('/upload')}
+            onClick={() => navigate("/upload")}
             className="btn btn-primary"
           >
             + Upload New Job Description
@@ -58,7 +58,10 @@ export const Dashboard: React.FC = () => {
         ) : jobDescriptions && jobDescriptions.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {jobDescriptions.map((job: JobDescription) => (
-              <div key={job.id} className="card hover:shadow-xl transition-shadow">
+              <div
+                key={job.id}
+                className="card hover:shadow-xl transition-shadow"
+              >
                 <div className="space-y-4">
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -75,7 +78,13 @@ export const Dashboard: React.FC = () => {
                         job.status
                       )}`}
                     >
-                      {job.status.replace('_', ' ')}
+                      {job.status
+                        .replace("_", " ")
+                        .split(" ")
+                        .map(
+                          (word) => word.charAt(0).toUpperCase() + word.slice(1)
+                        )
+                        .join(" ")}
                     </span>
                     <span className="text-sm text-gray-500">
                       {new Date(job.created_at).toLocaleDateString()}
@@ -86,7 +95,7 @@ export const Dashboard: React.FC = () => {
                     <p className="text-sm text-red-600">{job.error_message}</p>
                   )}
 
-                  {job.status === 'questions_generated' && (
+                  {job.status === "questions_generated" && (
                     <button
                       onClick={() => navigate(`/practice/${job.id}`)}
                       className="btn btn-primary w-full"
@@ -104,7 +113,7 @@ export const Dashboard: React.FC = () => {
               No job descriptions yet. Upload one to get started!
             </p>
             <button
-              onClick={() => navigate('/upload')}
+              onClick={() => navigate("/upload")}
               className="btn btn-primary"
             >
               Upload Job Description

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { useParams, useNavigate } from 'react-router-dom';
-import { jobDescriptionsAPI, responsesAPI } from '@/services/api';
-import { useAudioRecorder } from '@/hooks/useAudioRecorder';
-import type { Response as EvaluationResponse } from '@/types';
+import React, { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useParams, useNavigate } from "react-router-dom";
+import { jobDescriptionsAPI, responsesAPI } from "@/services/api";
+import { useAudioRecorder } from "@/hooks/useAudioRecorder";
+import type { Response as EvaluationResponse } from "@/types";
 
 export const Practice: React.FC = () => {
   const { jobDescriptionId } = useParams<{ jobDescriptionId: string }>();
@@ -13,7 +13,7 @@ export const Practice: React.FC = () => {
   const [evaluation, setEvaluation] = useState<EvaluationResponse | null>(null);
 
   const { data: questions, isLoading } = useQuery({
-    queryKey: ['questions', jobDescriptionId],
+    queryKey: ["questions", jobDescriptionId],
     queryFn: () => jobDescriptionsAPI.getQuestions(jobDescriptionId!),
     enabled: !!jobDescriptionId,
   });
@@ -29,8 +29,13 @@ export const Practice: React.FC = () => {
   } = useAudioRecorder();
 
   const submitMutation = useMutation({
-    mutationFn: ({ questionId, audioFile }: { questionId: string; audioFile: File }) =>
-      responsesAPI.submit(questionId, audioFile),
+    mutationFn: ({
+      questionId,
+      audioFile,
+    }: {
+      questionId: string;
+      audioFile: File;
+    }) => responsesAPI.submit(questionId, audioFile),
     onSuccess: (data) => {
       setEvaluation(data);
     },
@@ -40,7 +45,9 @@ export const Practice: React.FC = () => {
     if (!audioBlob || !questions) return;
 
     const currentQuestion = questions[currentQuestionIndex];
-    const audioFile = new File([audioBlob], 'response.webm', { type: 'audio/webm' });
+    const audioFile = new File([audioBlob], "response.webm", {
+      type: "audio/webm",
+    });
 
     submitMutation.mutate({
       questionId: currentQuestion.id,
@@ -55,7 +62,7 @@ export const Practice: React.FC = () => {
       setEvaluation(null);
       clearRecording();
     } else {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   };
 
@@ -72,7 +79,10 @@ export const Practice: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="mb-4">No questions found</p>
-          <button onClick={() => navigate('/dashboard')} className="btn btn-primary">
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="btn btn-primary"
+          >
             Back to Dashboard
           </button>
         </div>
@@ -88,7 +98,7 @@ export const Practice: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate("/dashboard")}
             className="text-primary-600 hover:text-primary-500 dark:text-primary-400 mb-4"
           >
             ← Back to Dashboard
@@ -126,17 +136,19 @@ export const Practice: React.FC = () => {
                         onClick={isRecording ? stopRecording : startRecording}
                         className={`w-24 h-24 rounded-full flex items-center justify-center ${
                           isRecording
-                            ? 'bg-red-600 hover:bg-red-700 animate-pulse'
-                            : 'bg-primary-600 hover:bg-primary-700'
+                            ? "bg-red-600 hover:bg-red-700 animate-pulse"
+                            : "bg-primary-600 hover:bg-primary-700"
                         }`}
                       >
                         <div className="text-white text-3xl">
-                          {isRecording ? '⏸' : '🎙️'}
+                          {isRecording ? "⏸" : "🎙️"}
                         </div>
                       </button>
                     </div>
                     <p className="text-gray-700 dark:text-gray-300">
-                      {isRecording ? 'Recording... Click to stop' : 'Click to start recording'}
+                      {isRecording
+                        ? "Recording... Click to stop"
+                        : "Click to start recording"}
                     </p>
                   </div>
                 ) : (
@@ -145,7 +157,17 @@ export const Practice: React.FC = () => {
                       ✓ Recording complete
                     </p>
                     {audioURL && (
-                      <audio src={audioURL} controls className="w-full" />
+                      <audio
+                        src={audioURL}
+                        controls
+                        className="w-full"
+                        preload="metadata"
+                        onLoadedMetadata={(e) => {
+                          // Force the audio player to update its display
+                          const audio = e.currentTarget;
+                          audio.currentTime = 0;
+                        }}
+                      />
                     )}
                     <div className="flex gap-4">
                       <button
@@ -159,12 +181,15 @@ export const Practice: React.FC = () => {
                         disabled={submitMutation.isPending}
                         className="btn btn-primary flex-1"
                       >
-                        {submitMutation.isPending ? 'Submitting...' : 'Submit Response'}
+                        {submitMutation.isPending
+                          ? "Submitting..."
+                          : "Submit Response"}
                       </button>
                     </div>
                     {submitMutation.isPending && (
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Transcribing and evaluating... This may take 10-30 seconds.
+                        Transcribing and evaluating... This may take 10-30
+                        seconds.
                       </p>
                     )}
                   </div>
@@ -195,7 +220,7 @@ export const Practice: React.FC = () => {
                   <div key={key}>
                     <div className="flex justify-between mb-2">
                       <span className="text-gray-700 dark:text-gray-300 capitalize">
-                        {key.replace('_', ' ')}
+                        {key.replace("_", " ")}
                       </span>
                       <span className="font-semibold text-gray-900 dark:text-white">
                         {value}/10
@@ -208,7 +233,11 @@ export const Practice: React.FC = () => {
                       />
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                      {evaluation.feedback[key as keyof typeof evaluation.feedback]}
+                      {
+                        evaluation.feedback[
+                          key as keyof typeof evaluation.feedback
+                        ]
+                      }
                     </p>
                   </div>
                 ))}
@@ -230,8 +259,8 @@ export const Practice: React.FC = () => {
               className="btn btn-primary w-full"
             >
               {currentQuestionIndex < questions.length - 1
-                ? 'Next Question'
-                : 'Finish Practice'}
+                ? "Next Question"
+                : "Finish Practice"}
             </button>
           </div>
         )}

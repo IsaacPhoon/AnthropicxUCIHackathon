@@ -44,10 +44,13 @@ export const useAudioRecorder = (): UseAudioRecorderReturn => {
       // Handle stop event
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const url = URL.createObjectURL(blob);
-
-        setAudioBlob(blob);
-        setAudioURL(url);
+        
+        // Create URL after a small delay to ensure blob is fully formed
+        setTimeout(() => {
+          const url = URL.createObjectURL(blob);
+          setAudioBlob(blob);
+          setAudioURL(url);
+        }, 100);
 
         // Stop all tracks
         stream.getTracks().forEach((track) => track.stop());
