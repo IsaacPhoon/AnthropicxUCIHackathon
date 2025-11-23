@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
+import { AuthBackground } from "@/components/AuthBackground";
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -93,79 +94,9 @@ export const Login: React.FC = () => {
     },
   };
 
-  const floatingAnimation = {
-    y: [0, -10, 0],
-    transition: {
-      duration: 3,
-      repeat: Infinity,
-      ease: "easeInOut" as const,
-    },
-  };
-
-  // Generate falling icons - memoized to prevent regeneration on re-renders
-  const fallingIcons = useMemo(
-    () =>
-      Array.from({ length: 30 }, (_, i) => {
-        const isResume = Math.random() > 0.5;
-        const delay = Math.random() * 8;
-        const duration = 8 + Math.random() * 5;
-        const startX = Math.random() * 100;
-        const rotation = Math.random() * 360;
-        const scale = 0.5 + Math.random() * 0.5;
-
-        return {
-          id: i,
-          icon: isResume ? "📄" : "💼",
-          delay,
-          duration,
-          startX,
-          rotation,
-          scale,
-        };
-      }),
-    []
-  );
-
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      {/* Falling icons animation */}
-      {fallingIcons.map((item) => (
-        <motion.div
-          key={item.id}
-          className="absolute pointer-events-none text-4xl opacity-20"
-          initial={{
-            top: "-10%",
-            left: `${item.startX}%`,
-            rotate: 0,
-            scale: item.scale,
-          }}
-          animate={{
-            top: "110%",
-            rotate: item.rotation,
-          }}
-          transition={{
-            duration: item.duration,
-            delay: item.delay,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        >
-          {item.icon}
-        </motion.div>
-      ))}
-
-      {/* Subtle animated background elements */}
-      <motion.div
-        animate={floatingAnimation}
-        className="absolute top-40 left-20 w-96 h-96 bg-blue-100/30 dark:bg-blue-900/10 rounded-full blur-3xl"
-      />
-      <motion.div
-        animate={{
-          ...floatingAnimation,
-          transition: { ...floatingAnimation.transition, delay: 1.5 },
-        }}
-        className="absolute bottom-40 right-20 w-80 h-80 bg-purple-100/30 dark:bg-purple-900/10 rounded-full blur-3xl"
-      />
+      <AuthBackground />
 
       <AnimatePresence mode="wait">
         {showIntro ? (
