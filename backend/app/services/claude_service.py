@@ -1,0 +1,198 @@
+"""Claude API service for question generation and response evaluation."""
+import logging
+from typing import List, Dict, Any
+from anthropic import Anthropic
+import json
+
+from app.core.config import settings
+
+logger = logging.getLogger(__name__)
+
+
+class ClaudeService:
+    """Service for interacting with Claude API."""
+
+    def __init__(self):
+        """Initialize Claude client."""
+        self.client = Anthropic(api_key=settings.claude_api_key)
+        self.model = settings.claude_model
+
+    def generate_questions(
+        self,
+        job_description_text: str,
+        company_name: str,
+        job_title: str
+    ) -> List[str]:
+        """
+        Generate 5 behavioral interview questions based on job description.
+
+        Args:
+            job_description_text: Extracted text from job description PDF
+            company_name: Name of the company
+            job_title: Title of the job position
+
+        Returns:
+            List of 5 question strings
+
+        Raises:
+            Exception: If Claude API call fails
+        """
+        prompt = f"""You are an expert interview coach. Based on the following job description, generate exactly 5 behavioral interview questions that are tailored to this specific role.
+
+Company: {company_name}
+Job Title: {job_title}
+
+Job Description:
+{job_description_text}
+
+Generate 5 behavioral interview questions that:
+1. Are specific to this role and company
+2. Follow the STAR method (Situation, Task, Action, Result)
+3. Test relevant competencies for this position
+4. Are clear and professionally worded
+5. Cover different aspects of the role
+
+Return ONLY a JSON array of 5 question strings, with no additional text or formatting. Example format:
+["Question 1?", "Question 2?", "Question 3?", "Question 4?", "Question 5?"]"""
+
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=2000,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
+
+            # Extract text from response
+            questions_text = response.content[0].text.strip()
+
+            # Parse JSON array
+            questions = json.loads(questions_text)
+
+            if not isinstance(questions, list) or len(questions) != 5:
+                logger.error(f"Invalid questions format: {questions}")
+                raise ValueError("Claude did not return exactly 5 questions")
+
+            logger.info(f"Generated {len(questions)} questions for {company_name} - {job_title}")
+            return questions
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse Claude response as JSON: {e}")
+            raise Exception("Failed to parse questions from Claude response")
+        except Exception as e:
+            logger.error(f"Claude API error during question generation: {e}")
+            raise
+
+    def evaluate_response(
+        self,
+        job_description_text: str,
+        question_text: str,
+        transcript: str
+    ) -> Dict[str, Any]:
+        """
+        Evaluate user's response using Claude API with structured outputs.
+
+        Args:
+            job_description_text: Original job description text
+            question_text: The interview question
+            transcript: User's transcribed response
+
+        Returns:
+            Dictionary containing scores and feedback
+
+        Raises:
+            Exception: If Claude API call fails
+        """
+        # Define JSON schema for structured output
+        schema = {
+            "type": "object",
+            "properties": {
+                "scores": {
+                    "type": "object",
+                    "properties": {
+                        "confidence": {"type": "integer", "minimum": 1, "maximum": 10},
+                        "clarity_structure": {"type": "integer", "minimum": 1, "maximum": 10},
+                        "technical_depth": {"type": "integer", "minimum": 1, "maximum": 10},
+                        "communication_skills": {"type": "integer", "minimum": 1, "maximum": 10},
+                        "relevance": {"type": "integer", "minimum": 1, "maximum": 10}
+                    },
+                    "required": ["confidence", "clarity_structure", "technical_depth", "communication_skills", "relevance"]
+                },
+                "feedback": {
+                    "type": "object",
+                    "properties": {
+                        "confidence": {"type": "string"},
+                        "clarity_structure": {"type": "string"},
+                        "technical_depth": {"type": "string"},
+                        "communication_skills": {"type": "string"},
+                        "relevance": {"type": "string"}
+                    },
+                    "required": ["confidence", "clarity_structure", "technical_depth", "communication_skills", "relevance"]
+                },
+                "overall_comment": {"type": "string"}
+            },
+            "required": ["scores", "feedback", "overall_comment"]
+        }
+
+        prompt = f"""You are an expert interview coach evaluating a candidate's response to a behavioral interview question.
+
+Job Description:
+{job_description_text}
+
+Interview Question:
+{question_text}
+
+Candidate's Response:
+{transcript}
+
+Evaluate the response on the following criteria (score 1-10 for each):
+
+1. **Confidence**: How confident and self-assured does the candidate sound?
+2. **Clarity/Structure**: How well-structured and clear is the response? Does it follow STAR method?
+3. **Technical Depth**: How well does the response demonstrate relevant technical/domain knowledge?
+4. **Communication Skills**: How effectively does the candidate communicate their ideas?
+5. **Relevance/Alignment**: How well does the response align with the job requirements?
+
+For each category, provide:
+- A score from 1 to 10
+- Concise, actionable feedback (2-3 sentences)
+
+Also provide an overall comment summarizing the response quality and key areas for improvement."""
+
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=3000,
+                extra_headers={
+                    "anthropic-beta": "structured-outputs-2025-11-13"
+                },
+                messages=[
+                    {"role": "user", "content": prompt}
+                ],
+                output_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "interview_evaluation",
+                        "schema": schema
+                    }
+                }
+            )
+
+            # Extract and parse the structured JSON response
+            evaluation_text = response.content[0].text.strip()
+            evaluation = json.loads(evaluation_text)
+
+            logger.info("Successfully evaluated response with Claude")
+            return evaluation
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse Claude evaluation as JSON: {e}")
+            raise Exception("Failed to parse evaluation from Claude response")
+        except Exception as e:
+            logger.error(f"Claude API error during response evaluation: {e}")
+            raise
+
+
+# Global service instance
+claude_service = ClaudeService()

@@ -1,0 +1,36 @@
+"""Job description schemas."""
+from pydantic import BaseModel, UUID4
+from datetime import datetime
+from typing import Optional
+
+
+class JobDescriptionCreate(BaseModel):
+    """Schema for creating a job description."""
+    company_name: str
+    job_title: str
+
+
+class JobDescriptionResponse(BaseModel):
+    """Schema for job description response."""
+    id: UUID4
+    user_id: UUID4
+    company_name: str
+    job_title: str
+    status: str
+    error_message: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class JobDescriptionListResponse(BaseModel):
+    """Schema for listing job descriptions."""
+    id: UUID4
+    company_name: str
+    job_title: str
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

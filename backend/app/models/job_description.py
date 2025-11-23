@@ -1,0 +1,39 @@
+"""Job description model."""
+from sqlalchemy import Column, String, DateTime, Text, Enum as SQLEnum, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+from datetime import datetime
+import uuid
+import enum
+
+from app.core.database import Base
+
+
+class JobDescriptionStatus(enum.Enum):
+    """Status of job description processing."""
+    PENDING = "pending"
+    QUESTIONS_GENERATED = "questions_generated"
+    ERROR = "error"
+
+
+class JobDescription(Base):
+    """Job description model."""
+
+    __tablename__ = "job_descriptions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    company_name = Column(String, nullable=False)
+    job_title = Column(String, nullable=False)
+    file_path = Column(String, nullable=False)
+    extracted_text = Column(Text, nullable=True)
+    status = Column(SQLEnum(JobDescriptionStatus), default=JobDescriptionStatus.PENDING, nullable=False)
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="job_descriptions")
+    questions = relationship("Question", back_populates="job_description", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<JobDescription(id={self.id}, company={self.company_name}, title={self.job_title})>"
