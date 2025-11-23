@@ -16,11 +16,24 @@ function PracticeContent() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [evaluation, setEvaluation] = useState<EvaluationResponse | null>(null);
   const [initialIndexSet, setInitialIndexSet] = useState(false);
+  const [isViewingHistory, setIsViewingHistory] = useState(false);
+  const [selectedResponseId, setSelectedResponseId] = useState<string | null>(null);
 
   const { data: questions, isLoading } = useQuery({
     queryKey: ["questions", jobDescriptionId],
     queryFn: () => jobDescriptionsAPI.getQuestions(jobDescriptionId!),
     enabled: !!jobDescriptionId,
+  });
+
+  // Get current question
+  const currentQuestion = questions?.[currentQuestionIndex];
+
+  // Fetch all responses for current question if it has been answered
+  const { data: previousResponses, isLoading: isLoadingResponse } = useQuery({
+    queryKey: ["responses", currentQuestion?.id],
+    queryFn: () => responsesAPI.list(currentQuestion!.id),
+    enabled: !!currentQuestion && (currentQuestion.attempts_count ?? 0) > 0,
+    retry: false,
   });
 
   // Set initial question index to first unanswered question
@@ -35,6 +48,32 @@ function PracticeContent() {
       setInitialIndexSet(true);
     }
   }, [questions, initialIndexSet]);
+
+  // Load latest response when changing questions
+  useEffect(() => {
+    if (previousResponses && previousResponses.length > 0) {
+      const latestResponse = previousResponses[0]; // Already sorted by created_at desc
+      setSelectedResponseId(latestResponse.response_id);
+      setEvaluation(latestResponse);
+      setIsViewingHistory(true);
+    } else {
+      setSelectedResponseId(null);
+      setEvaluation(null);
+      setIsViewingHistory(false);
+    }
+    clearRecording();
+  }, [currentQuestionIndex, previousResponses]);
+
+  // Update evaluation when selected response changes
+  useEffect(() => {
+    if (selectedResponseId && previousResponses) {
+      const selected = previousResponses.find(r => r.response_id === selectedResponseId);
+      if (selected) {
+        setEvaluation(selected);
+        setIsViewingHistory(true);
+      }
+    }
+  }, [selectedResponseId, previousResponses]);
 
   const {
     isRecording,
@@ -57,6 +96,7 @@ function PracticeContent() {
     }) => responsesAPI.submit(questionId, audioFile),
     onSuccess: (data) => {
       setEvaluation(data);
+      setIsViewingHistory(false);
       // Invalidate questions query to update attempts_count
       // This will refresh the data but won't change currentQuestionIndex
     },
@@ -76,15 +116,25 @@ function PracticeContent() {
     });
   };
 
+  const handlePreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
   const handleNextQuestion = () => {
     if (!questions) return;
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setEvaluation(null);
-      clearRecording();
     } else {
       router.push("/dashboard");
     }
+  };
+
+  const handleTryAgain = () => {
+    setEvaluation(null);
+    setIsViewingHistory(false);
+    clearRecording();
   };
 
   if (isLoading) {
@@ -111,7 +161,13 @@ function PracticeContent() {
     );
   }
 
-  const currentQuestion = questions[currentQuestionIndex];
+  if (!currentQuestion) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4">
@@ -124,7 +180,7 @@ function PracticeContent() {
           >
             ← Back to Dashboard
           </button>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mb-4">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Interview Practice
             </h1>
@@ -132,13 +188,50 @@ function PracticeContent() {
               Question {currentQuestionIndex + 1} of {questions.length}
             </span>
           </div>
+          {/* Question Navigation */}
+          <div className="flex gap-2 justify-center">
+            <button
+              onClick={handlePreviousQuestion}
+              disabled={currentQuestionIndex === 0}
+              className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              ← Previous
+            </button>
+            <button
+              onClick={handleNextQuestion}
+              disabled={currentQuestionIndex === questions.length - 1}
+              className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next →
+            </button>
+          </div>
         </div>
 
         {/* Question Card */}
         <div className="card mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            {currentQuestion.question_text}
-          </h2>
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              {currentQuestion.question_text}
+            </h2>
+            {previousResponses && previousResponses.length > 0 && (
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  View Response:
+                </label>
+                <select
+                  value={selectedResponseId || ""}
+                  onChange={(e) => setSelectedResponseId(e.target.value)}
+                  className="form-select rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm"
+                >
+                  {previousResponses.map((response, index) => (
+                    <option key={response.response_id} value={response.response_id}>
+                      Attempt {previousResponses.length - index} - {new Date(response.created_at).toLocaleDateString()} {new Date(response.created_at).toLocaleTimeString()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
 
           {/* Recording Interface */}
           <div className="space-y-4">
@@ -148,7 +241,7 @@ function PracticeContent() {
               </div>
             )}
 
-            {!evaluation && (
+            {!evaluation && !isLoadingResponse && (
               <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 text-center">
                 {!audioBlob ? (
                   <div className="space-y-4">
@@ -280,14 +373,24 @@ function PracticeContent() {
               )}
             </div>
 
-            <button
-              onClick={handleNextQuestion}
-              className="btn btn-primary w-full"
-            >
-              {currentQuestionIndex < questions.length - 1
-                ? "Next Question"
-                : "Finish Practice"}
-            </button>
+            <div className="flex gap-4">
+              {isViewingHistory && (
+                <button
+                  onClick={handleTryAgain}
+                  className="btn btn-secondary flex-1"
+                >
+                  Try Again
+                </button>
+              )}
+              <button
+                onClick={handleNextQuestion}
+                className={`btn btn-primary ${isViewingHistory ? 'flex-1' : 'w-full'}`}
+              >
+                {currentQuestionIndex < questions.length - 1
+                  ? "Next Question"
+                  : "Back to Dashboard"}
+              </button>
+            </div>
           </div>
         )}
       </div>
