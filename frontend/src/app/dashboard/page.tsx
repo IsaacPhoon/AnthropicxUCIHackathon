@@ -99,12 +99,23 @@ function DashboardContent() {
                   )}
 
                   {job.status === "questions_generated" && (
-                    <button
-                      onClick={() => router.push(`/practice/${job.id}`)}
-                      className="btn btn-primary w-full"
-                    >
-                      Start Practice
-                    </button>
+                    <>
+                      {job.answered_questions !== undefined &&
+                        job.total_questions !== undefined &&
+                        job.total_questions > 0 && (
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
+                            Progress: {job.answered_questions} / {job.total_questions} questions
+                          </div>
+                        )}
+                      <button
+                        onClick={() => router.push(`/practice/${job.id}`)}
+                        className="btn btn-primary w-full"
+                      >
+                        {job.answered_questions && job.answered_questions > 0
+                          ? "Continue Practice"
+                          : "Start Practice"}
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { jobDescriptionsAPI, responsesAPI } from "@/services/api";
@@ -15,6 +15,7 @@ function PracticeContent() {
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [evaluation, setEvaluation] = useState<EvaluationResponse | null>(null);
+  const [initialIndexSet, setInitialIndexSet] = useState(false);
 
   const { data: questions, isLoading } = useQuery({
     queryKey: ["questions", jobDescriptionId],
@@ -22,8 +23,22 @@ function PracticeContent() {
     enabled: !!jobDescriptionId,
   });
 
+  // Set initial question index to first unanswered question
+  useEffect(() => {
+    if (questions && questions.length > 0 && !initialIndexSet) {
+      const firstUnanswered = questions.findIndex(
+        (q) => !q.attempts_count || q.attempts_count === 0
+      );
+      if (firstUnanswered !== -1) {
+        setCurrentQuestionIndex(firstUnanswered);
+      }
+      setInitialIndexSet(true);
+    }
+  }, [questions, initialIndexSet]);
+
   const {
     isRecording,
+    isInitializing,
     audioBlob,
     audioURL,
     startRecording,
@@ -42,6 +57,8 @@ function PracticeContent() {
     }) => responsesAPI.submit(questionId, audioFile),
     onSuccess: (data) => {
       setEvaluation(data);
+      // Invalidate questions query to update attempts_count
+      // This will refresh the data but won't change currentQuestionIndex
     },
   });
 
@@ -138,19 +155,24 @@ function PracticeContent() {
                     <div className="flex justify-center">
                       <button
                         onClick={isRecording ? stopRecording : startRecording}
+                        disabled={isInitializing}
                         className={`w-24 h-24 rounded-full flex items-center justify-center ${
                           isRecording
                             ? "bg-red-600 hover:bg-red-700 animate-pulse"
+                            : isInitializing
+                            ? "bg-gray-400 cursor-not-allowed"
                             : "bg-primary-600 hover:bg-primary-700"
                         }`}
                       >
                         <div className="text-white text-3xl">
-                          {isRecording ? "⏸" : "🎙️"}
+                          {isInitializing ? "⏳" : isRecording ? "⏸" : "🎙️"}
                         </div>
                       </button>
                     </div>
                     <p className="text-gray-700 dark:text-gray-300">
-                      {isRecording
+                      {isInitializing
+                        ? "Initializing microphone..."
+                        : isRecording
                         ? "Recording... Click to stop"
                         : "Click to start recording"}
                     </p>
