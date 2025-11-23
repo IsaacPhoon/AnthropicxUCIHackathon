@@ -19,22 +19,39 @@ export const Login: React.FC = () => {
 
   useEffect(() => {
     let index = 0;
-    const typingSpeed = 20;
+    const typingSpeed = 25;
+    let timeoutId: number;
 
     const typeText = () => {
       if (index < introText.length) {
         setDisplayedText(introText.slice(0, index + 1));
         index++;
-        setTimeout(typeText, typingSpeed);
+        timeoutId = setTimeout(typeText, typingSpeed);
       } else {
-        setTimeout(() => {
+        timeoutId = setTimeout(() => {
           setShowIntro(false);
         }, 1500);
       }
     };
 
     typeText();
-  }, []);
+
+    // Handle spacebar press to skip intro
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.code === "Space" && showIntro) {
+        e.preventDefault();
+        clearTimeout(timeoutId);
+        setShowIntro(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [showIntro]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,6 +137,34 @@ export const Login: React.FC = () => {
                 |
               </motion.span>
             </h1>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-8 flex items-center justify-center gap-2"
+            >
+              <motion.span
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="text-gray-500 dark:text-gray-400 text-sm font-medium"
+              >
+                Press
+              </motion.span>
+              <motion.kbd
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="px-3 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-sm"
+              >
+                SPACE
+              </motion.kbd>
+              <motion.span
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="text-gray-500 dark:text-gray-400 text-sm font-medium"
+              >
+                to skip
+              </motion.span>
+            </motion.div>
           </motion.div>
         ) : (
           <motion.div
