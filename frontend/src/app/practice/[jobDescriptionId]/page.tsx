@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -10,6 +10,7 @@ import type { Response as EvaluationResponse } from "@/types";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { CustomDropdown } from "@/components/CustomDropdown";
 import { QuestionTimeline } from "@/components/QuestionTimeline";
+import { formatDateTime } from "@/utils/dateFormatter";
 
 function PracticeContent() {
   const params = useParams();
@@ -20,7 +21,9 @@ function PracticeContent() {
   const [evaluation, setEvaluation] = useState<EvaluationResponse | null>(null);
   const [initialIndexSet, setInitialIndexSet] = useState(false);
   const [isViewingHistory, setIsViewingHistory] = useState(false);
-  const [selectedResponseId, setSelectedResponseId] = useState<string | null>(null);
+  const [selectedResponseId, setSelectedResponseId] = useState<string | null>(
+    null
+  );
 
   const { data: questions, isLoading } = useQuery({
     queryKey: ["questions", jobDescriptionId],
@@ -70,7 +73,9 @@ function PracticeContent() {
   // Update evaluation when selected response changes
   useEffect(() => {
     if (selectedResponseId && previousResponses) {
-      const selected = previousResponses.find(r => r.response_id === selectedResponseId);
+      const selected = previousResponses.find(
+        (r) => r.response_id === selectedResponseId
+      );
       if (selected) {
         setEvaluation(selected);
         setIsViewingHistory(true);
@@ -188,8 +193,18 @@ function PracticeContent() {
             whileHover={{ x: -4 }}
             whileTap={{ scale: 0.95 }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
             </svg>
             Back to Dashboard
           </motion.button>
@@ -199,7 +214,11 @@ function PracticeContent() {
             </h1>
             <div className="px-4 py-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
               <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Question <span className="text-primary-600 dark:text-primary-400 font-bold">{currentQuestionIndex + 1}</span> of {questions.length}
+                Question{" "}
+                <span className="text-primary-600 dark:text-primary-400 font-bold">
+                  {currentQuestionIndex + 1}
+                </span>{" "}
+                of {questions.length}
               </span>
             </div>
           </div>
@@ -234,13 +253,17 @@ function PracticeContent() {
                 </label>
                 <CustomDropdown
                   options={previousResponses.map((response, index) => {
-                    const avgScore = Object.values(response.scores).reduce((a, b) => a + b, 0) / Object.keys(response.scores).length;
+                    const avgScore =
+                      Object.values(response.scores).reduce(
+                        (a, b) => a + b,
+                        0
+                      ) / Object.keys(response.scores).length;
                     return {
                       value: response.response_id,
                       label: `Attempt ${previousResponses.length - index}`,
                       metadata: {
                         score: avgScore,
-                        date: new Date(response.created_at).toLocaleString(),
+                        date: formatDateTime(response.created_at),
                       },
                     };
                   })}
@@ -282,7 +305,9 @@ function PracticeContent() {
                         whileHover={!isInitializing ? { scale: 1.05 } : {}}
                         whileTap={!isInitializing ? { scale: 0.95 } : {}}
                         animate={isRecording ? { scale: [1, 1.05, 1] } : {}}
-                        transition={isRecording ? { duration: 1, repeat: Infinity } : {}}
+                        transition={
+                          isRecording ? { duration: 1, repeat: Infinity } : {}
+                        }
                       >
                         <div className="text-white text-3xl">
                           {isInitializing ? "⏳" : isRecording ? "⏸" : "🎙️"}
@@ -309,8 +334,16 @@ function PracticeContent() {
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", stiffness: 400 }}
                     >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                       Recording complete
                     </motion.p>
@@ -353,7 +386,8 @@ function PracticeContent() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                       >
-                        Transcribing and evaluating... This may take 10-30 seconds.
+                        Transcribing and evaluating... This may take 10-30
+                        seconds.
                       </motion.p>
                     )}
                   </motion.div>
@@ -380,15 +414,27 @@ function PracticeContent() {
             >
               <div className="flex items-start gap-3 mb-4">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  <svg
+                    className="w-5 h-5 text-blue-600 dark:text-blue-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                    />
                   </svg>
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Your Response
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Transcribed from audio</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Transcribed from audio
+                  </p>
                 </div>
               </div>
               <div className="relative">
@@ -409,8 +455,18 @@ function PracticeContent() {
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 dark:bg-blue-500 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                   </div>
                   <div className="flex-1">
@@ -439,10 +495,29 @@ function PracticeContent() {
                 {Object.entries(evaluation.scores).map(([key, value]) => {
                   const percentage = (value / 10) * 100;
                   const getScoreColor = (score: number) => {
-                    if (score >= 8) return { bg: 'bg-green-500', text: 'text-green-600 dark:text-green-400', ring: 'ring-green-100 dark:ring-green-900' };
-                    if (score >= 6) return { bg: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400', ring: 'ring-blue-100 dark:ring-blue-900' };
-                    if (score >= 4) return { bg: 'bg-yellow-500', text: 'text-yellow-600 dark:text-yellow-400', ring: 'ring-yellow-100 dark:ring-yellow-900' };
-                    return { bg: 'bg-red-500', text: 'text-red-600 dark:text-red-400', ring: 'ring-red-100 dark:ring-red-900' };
+                    if (score >= 8)
+                      return {
+                        bg: "bg-green-500",
+                        text: "text-green-600 dark:text-green-400",
+                        ring: "ring-green-100 dark:ring-green-900",
+                      };
+                    if (score >= 6)
+                      return {
+                        bg: "bg-blue-500",
+                        text: "text-blue-600 dark:text-blue-400",
+                        ring: "ring-blue-100 dark:ring-blue-900",
+                      };
+                    if (score >= 4)
+                      return {
+                        bg: "bg-yellow-500",
+                        text: "text-yellow-600 dark:text-yellow-400",
+                        ring: "ring-yellow-100 dark:ring-yellow-900",
+                      };
+                    return {
+                      bg: "bg-red-500",
+                      text: "text-red-600 dark:text-red-400",
+                      ring: "ring-red-100 dark:ring-red-900",
+                    };
                   };
                   const colors = getScoreColor(value);
 
@@ -452,11 +527,15 @@ function PracticeContent() {
                         <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
                           {key.replace(/_/g, " ")}
                         </span>
-                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${colors.ring} ring-2`}>
+                        <div
+                          className={`flex items-center gap-2 px-3 py-1 rounded-full ${colors.ring} ring-2`}
+                        >
                           <span className={`text-sm font-bold ${colors.text}`}>
                             {value}
                           </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">/10</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            /10
+                          </span>
                         </div>
                       </div>
                       <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -468,7 +547,11 @@ function PracticeContent() {
                         </div>
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                        {evaluation.feedback[key as keyof typeof evaluation.feedback]}
+                        {
+                          evaluation.feedback[
+                            key as keyof typeof evaluation.feedback
+                          ]
+                        }
                       </p>
                     </div>
                   );
@@ -490,23 +573,45 @@ function PracticeContent() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <svg className="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  <svg
+                    className="w-4 h-4 inline-block mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
                   </svg>
                   Try Again
                 </motion.button>
               )}
               <motion.button
                 onClick={handleNextQuestion}
-                className={`btn btn-primary shadow-md ${isViewingHistory ? 'flex-1' : 'w-full'}`}
+                className={`btn btn-primary shadow-md ${
+                  isViewingHistory ? "flex-1" : "w-full"
+                }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 {currentQuestionIndex < questions.length - 1
                   ? "Next Question"
                   : "Back to Dashboard"}
-                <svg className="w-4 h-4 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                <svg
+                  className="w-4 h-4 inline-block ml-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
                 </svg>
               </motion.button>
             </motion.div>
