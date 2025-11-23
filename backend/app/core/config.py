@@ -1,9 +1,10 @@
 """Application configuration using Pydantic settings."""
 
 import json
+import os
 from typing import Optional
 
-from pydantic import Field
+from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,15 +17,14 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # Database
-    database_url_raw: str = Field(alias='DATABASE_URL')
-
+    @computed_field
     @property
     def database_url(self) -> str:
         """Get database URL, converting postgres:// to postgresql:// for Heroku compatibility."""
-        url = self.database_url_raw
-        if url.startswith("postgres://"):
-            url = url.replace("postgres://", "postgresql://", 1)
-        return url
+        _raw_database_url = os.environ.get('DATABASE_URL')
+        if _raw_database_url.startswith("postgres://"):
+            _raw_database_url = _raw_database_url.replace("postgres://", "postgresql://", 1)
+        return _raw_database_url
 
     # Security
     jwt_secret: str
@@ -66,8 +66,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file='.env',
         env_file_encoding='utf-8',
-        case_sensitive=False,
-        populate_by_name=True
+        case_sensitive=False
     )
 
 
