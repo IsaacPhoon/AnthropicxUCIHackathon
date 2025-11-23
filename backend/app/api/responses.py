@@ -99,7 +99,7 @@ async def submit_response(
             # Upload to R2 after successful transcription
             # Reset file position to beginning for upload
             audio_file.file.seek(0)
-            r2_key = await storage_service.save_audio(audio_file.file, filename)
+            r2_key = storage_service.save_audio(audio_file.file, filename)
             logger.info(f'Audio saved to R2: {r2_key}')
 
         finally:
