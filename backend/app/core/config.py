@@ -25,10 +25,15 @@ class Settings(BaseSettings):
     claude_model: str = "claude-sonnet-4-5-20250929"
 
     # Storage
-    storage_root: str = "./uploads"
-    max_pdf_size_mb: int = 10
     max_audio_size_mb: int = 50
     max_audio_duration_minutes: int = 5
+
+    # Cloudflare R2 Storage (Required)
+    r2_endpoint_url: str
+    r2_access_key_id: str
+    r2_secret_access_key: str
+    r2_bucket_name: str
+    r2_public_url: Optional[str] = None  # Optional: Custom domain for public access
 
     # Whisper
     whisper_model: str = "base.en"

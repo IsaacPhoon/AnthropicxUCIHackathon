@@ -6,6 +6,7 @@ anthropic==0.74.1
 anyio==4.11.0
 av==16.0.1
 bcrypt==4.2.1
+boto3==1.41.2
 certifi==2025.11.12
 cffi==2.0.0
 charset-normalizer==3.4.4

@@ -1,5 +1,7 @@
 """Response and evaluation API endpoints."""
 import logging
+import tempfile
+from pathlib import Path
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
@@ -70,18 +72,33 @@ async def submit_response(
         )
 
     try:
-        # Save audio file
-        audio_path = await storage_service.save_audio(audio_file.file, audio_file.filename)
+        filename = audio_file.filename or "response.webm"
 
-        # Transcribe audio
-        logger.info(f"Transcribing audio for question {question_id}")
-        transcript = whisper_service.transcribe(audio_path)
+        # Save uploaded file to temporary location for transcription
+        with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp_file:
+            temp_file.write(content)
+            temp_audio_path = temp_file.name
 
-        # Create response record
+        try:
+            # Transcribe audio from temporary file
+            logger.info(f"Transcribing audio for question {question_id}")
+            transcript = whisper_service.transcribe(temp_audio_path)
+
+            # Upload to R2 after successful transcription
+            # Reset file position to beginning for upload
+            audio_file.file.seek(0)
+            r2_key = await storage_service.save_audio(audio_file.file, filename)
+            logger.info(f"Audio saved to R2: {r2_key}")
+
+        finally:
+            # Clean up temporary file
+            Path(temp_audio_path).unlink(missing_ok=True)
+
+        # Create response record with R2 key
         response = Response(
             question_id=question.id,
             user_id=current_user.id,
-            audio_path=audio_path,
+            audio_path=r2_key,  # Store R2 key for later retrieval
             transcript=transcript
         )
 
