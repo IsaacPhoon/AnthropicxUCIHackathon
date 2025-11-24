@@ -20,7 +20,7 @@ from app.schemas.response import (
 )
 from app.services.claude_service import claude_service
 from app.services.storage_service import storage_service
-#from app.services.whisper_service import whisper_service
+from app.services.whisper_service import whisper_service
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 

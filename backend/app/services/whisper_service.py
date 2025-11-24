@@ -4,24 +4,32 @@ import logging
 from pathlib import Path
 
 from app.core.config import settings
-from faster_whisper import WhisperModel
 
 logger = logging.getLogger(__name__)
 
 
 class WhisperService:
-    """Service for audio transcription using faster-whisper."""
+    """Service for audio transcription using faster-whisper with lazy loading."""
 
     def __init__(self):
-        """Initialize Whisper model."""
-        logger.info(
-            f'Initializing Whisper model: {settings.whisper_model} on {settings.whisper_device}'
-        )
-        self.model = WhisperModel(
-            settings.whisper_model,
-            device=settings.whisper_device,
-            compute_type='int8' if settings.whisper_device == 'cpu' else 'float16',
-        )
+        """Initialize Whisper service without loading the model yet."""
+        self._model = None
+        logger.info('Whisper service initialized (lazy loading enabled)')
+    
+    def _ensure_model_loaded(self):
+        """Load the Whisper model if not already loaded (lazy loading)."""
+        if self._model is None:
+            from faster_whisper import WhisperModel
+            
+            logger.info(
+                f'Loading Whisper model: {settings.whisper_model} on {settings.whisper_device}'
+            )
+            self._model = WhisperModel(
+                settings.whisper_model,
+                device=settings.whisper_device,
+                compute_type='int8' if settings.whisper_device == 'cpu' else 'float16',
+            )
+            logger.info('Whisper model loaded successfully')
 
     def transcribe(self, audio_path: str) -> str:
         """
@@ -37,6 +45,9 @@ class WhisperService:
             Exception: If transcription fails
         """
         try:
+            # Load model on first use (lazy loading)
+            self._ensure_model_loaded()
+            
             # Verify file exists
             audio_file = Path(audio_path)
             if not audio_file.exists():
@@ -45,7 +56,7 @@ class WhisperService:
             logger.info(f'Transcribing audio file: {audio_path}')
 
             # Transcribe with faster-whisper
-            segments, info = self.model.transcribe(
+            segments, info = self._model.transcribe(
                 audio_path,
                 language='en',
                 beam_size=5,
