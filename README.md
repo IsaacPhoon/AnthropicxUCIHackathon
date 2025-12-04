@@ -132,7 +132,7 @@ Contributions are welcome! If you'd like to improve InterviewIQ:
 
 ## License
 
-This project is licensed under the MIT License - see [LICENSE](LICENSE) for more details.
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 
