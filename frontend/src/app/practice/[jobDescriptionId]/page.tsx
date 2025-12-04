@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { jobDescriptionsAPI, responsesAPI } from "@/services/api";
@@ -16,6 +16,7 @@ function PracticeContent() {
   const params = useParams();
   const jobDescriptionId = params.jobDescriptionId as string;
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [evaluation, setEvaluation] = useState<EvaluationResponse | null>(null);
@@ -106,7 +107,13 @@ function PracticeContent() {
       setEvaluation(data);
       setIsViewingHistory(false);
       // Invalidate questions query to update attempts_count
-      // This will refresh the data but won't change currentQuestionIndex
+      queryClient.invalidateQueries({
+        queryKey: ["questions", jobDescriptionId],
+      });
+      // Invalidate responses query to show the new response
+      queryClient.invalidateQueries({
+        queryKey: ["responses", currentQuestion?.id],
+      });
     },
   });
 
