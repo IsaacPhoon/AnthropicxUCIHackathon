@@ -120,7 +120,7 @@ async def submit_response(
         # Evaluate response using Claude
         logger.info(f'Evaluating response {response.id}')
         evaluation = claude_service.evaluate_response(
-            str(job_description.extracted_text) if job_description else '',
+            str(job_description.description_text) if job_description else '',
             str(question.question_text),
             transcript
         )
