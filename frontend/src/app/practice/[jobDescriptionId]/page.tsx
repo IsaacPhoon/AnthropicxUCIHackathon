@@ -42,7 +42,10 @@ function PracticeContent() {
 
   const { data: questions, isLoading } = useQuery({
     queryKey: ["questions", jobDescriptionId],
-    queryFn: () => jobDescriptionsAPI.getQuestions(jobDescriptionId!),
+    queryFn: () => {
+      if (!jobDescriptionId) throw new Error('Job description ID is required');
+      return jobDescriptionsAPI.getQuestions(jobDescriptionId);
+    },
     enabled: !!jobDescriptionId,
   });
 
@@ -52,7 +55,10 @@ function PracticeContent() {
   // Fetch all responses for current question if it has been answered
   const { data: previousResponses, isLoading: isLoadingResponse } = useQuery({
     queryKey: ["responses", currentQuestion?.id],
-    queryFn: () => responsesAPI.list(currentQuestion!.id),
+    queryFn: () => {
+      if (!currentQuestion) throw new Error('Current question is required');
+      return responsesAPI.list(currentQuestion.id);
+    },
     enabled: !!currentQuestion && (currentQuestion.attempts_count ?? 0) > 0,
     retry: false,
   });
@@ -83,7 +89,8 @@ function PracticeContent() {
       setIsViewingHistory(false);
     }
     clearRecording();
-  }, [currentQuestionIndex, previousResponses, clearRecording]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestionIndex, previousResponses]);
 
   // Update evaluation when selected response changes
   useEffect(() => {
@@ -143,7 +150,7 @@ function PracticeContent() {
     });
   };
 
-  const handlePreviousQuestion = () => {
+  const _handlePreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
     }

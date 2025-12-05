@@ -68,11 +68,15 @@ function UploadContent() {
       queryClient.invalidateQueries({ queryKey: ["jobDescriptions"] });
       router.push("/dashboard");
     },
-    onError: (err: any) => {
-      setError(
-        err.response?.data?.detail ||
-          "Failed to create job description. Please try again."
-      );
+    onError: (err: unknown) => {
+      const errorMessage =
+        (err && typeof err === 'object' && 'response' in err &&
+         err.response && typeof err.response === 'object' && 'data' in err.response &&
+         err.response.data && typeof err.response.data === 'object' && 'detail' in err.response.data &&
+         typeof err.response.data.detail === 'string')
+          ? err.response.data.detail
+          : "Failed to create job description. Please try again.";
+      setError(errorMessage);
     },
   });
 
