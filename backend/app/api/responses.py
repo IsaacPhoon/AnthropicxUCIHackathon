@@ -110,7 +110,7 @@ async def submit_response(
         response = Response(
             question_id=question.id,
             user_id=current_user.id,
-            audio_path=r2_key,  # Store R2 key for later retrieval
+            audio_path=r2_key,  
             transcript=transcript,
         )
 

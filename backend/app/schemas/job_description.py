@@ -11,7 +11,7 @@ class JobDescriptionCreate(BaseModel):
 
     company_name: str
     job_title: str
-    description_text: str  # New field for text input
+    description_text: str  
 
 
 class JobDescriptionResponse(BaseModel):

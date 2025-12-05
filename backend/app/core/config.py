@@ -51,7 +51,7 @@ class Settings(BaseSettings):
 
     # Whisper
     whisper_model: str = 'base.en'
-    whisper_device: str = 'cpu'  # or "cuda" for GPU
+    whisper_device: str = 'cpu' 
 
     # CORS
     cors_origins: str = '["http://localhost:5173", "http://localhost:3000"]'
