@@ -4,7 +4,6 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { useAuth } from "@/context/AuthContext";
 import { jobDescriptionsAPI } from "@/services/api";
 import type { JobDescription } from "@/types";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -13,7 +12,6 @@ import { formatDateOnly } from "@/utils/dateFormatter";
 
 function DashboardContent() {
   const router = useRouter();
-  const { logout } = useAuth();
 
   const { data: jobDescriptions, isLoading } = useQuery({
     queryKey: ["jobDescriptions"],
@@ -45,27 +43,6 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      {/* Header */}
-      <nav className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <motion.h1
-            className="text-2xl font-bold text-gray-900 dark:text-white"
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            InterviewIQ
-          </motion.h1>
-          <motion.button
-            onClick={logout}
-            className="btn btn-secondary"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Logout
-          </motion.button>
-        </div>
-      </nav>
-
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <motion.div
